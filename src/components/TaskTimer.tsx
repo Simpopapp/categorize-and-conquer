@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface TaskTimerProps {
   isActive: boolean;
@@ -29,7 +30,10 @@ export function TaskTimer({ isActive, onTick, initialTime = 0 }: TaskTimerProps)
   }, [isActive, onTick]);
 
   return (
-    <div className="font-mono text-sm">
+    <div className={cn(
+      "font-mono text-sm transition-all duration-300",
+      isActive && "text-primary font-bold scale-110"
+    )}>
       {formatTime(time)}
     </div>
   );

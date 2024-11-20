@@ -5,6 +5,7 @@ import { TaskTimer } from "./TaskTimer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Play, Pause } from "lucide-react";
 
 interface TaskListProps {
   tasks: Task[];
@@ -19,7 +20,14 @@ export function TaskList({ tasks, onUpdateTask }: TaskListProps) {
                      task.status === "in_progress" ? "completed" : "pending";
     
     onUpdateTask({ ...task, status: newStatus });
-    toast.success(`Task marked as ${newStatus.replace("_", " ")}`);
+    
+    if (newStatus === "in_progress") {
+      toast.success("Timer started!");
+    } else if (newStatus === "completed") {
+      toast.success("Task completed!");
+    } else {
+      toast.success("Task reset to pending");
+    }
   };
 
   const handleDescriptionChange = (task: Task, description: string) => {
@@ -43,11 +51,16 @@ export function TaskList({ tasks, onUpdateTask }: TaskListProps) {
                 size="sm"
                 onClick={() => handleStatusChange(task)}
                 className={cn(
-                  "min-w-[100px]",
+                  "min-w-[100px] flex items-center gap-2",
                   task.status === "completed" && "bg-green-100 text-green-700",
                   task.status === "in_progress" && "bg-blue-100 text-blue-700"
                 )}
               >
+                {task.status === "in_progress" ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
                 {task.status.replace("_", " ")}
               </Button>
               <h3 className="font-medium">{task.title}</h3>

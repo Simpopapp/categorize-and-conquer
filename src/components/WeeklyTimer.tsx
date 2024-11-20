@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatTime } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface WeeklyTimerProps {
   hasActiveTasks: boolean;
@@ -25,11 +27,24 @@ export function WeeklyTimer({ hasActiveTasks }: WeeklyTimerProps) {
   }, [hasActiveTasks, timeLeft]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-      <h2 className="text-lg font-semibold text-gray-700 mb-2">Weekly Time Left</h2>
-      <div className="text-4xl font-mono text-primary-DEFAULT">
-        {formatTime(timeLeft)}
-      </div>
-    </div>
+    <Card className={cn(
+      "transition-all duration-300",
+      hasActiveTasks && "border-primary shadow-lg"
+    )}>
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl">Weekly Time Left</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={cn(
+          "text-4xl font-mono",
+          hasActiveTasks ? "text-primary animate-pulse" : "text-muted-foreground"
+        )}>
+          {formatTime(timeLeft)}
+        </div>
+        <p className="text-sm text-muted-foreground mt-2">
+          {hasActiveTasks ? "Timer running..." : "Start a task to begin countdown"}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
