@@ -7,4 +7,8 @@ export interface Task {
   status: TaskStatus;
   timeSpent: number;
   createdAt: Date;
+  created_by?: string;
+  assignee?: string;
+  priority?: string;
+  due_date?: string;
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Task } from "@/lib/types";
-import { generateId } from "@/lib/utils";
+import { Task, TaskStatus } from "@/lib/types";
 import { WeeklyTimer } from "@/components/WeeklyTimer";
 import { TaskList } from "@/components/TaskList";
 import { Input } from "@/components/ui/input";
@@ -35,8 +34,9 @@ const Index = () => {
     setTasks(
       data.map((task) => ({
         ...task,
+        status: (task.status || "pending") as TaskStatus,
         timeSpent: 0,
-        createdAt: new Date(task.created_at),
+        createdAt: new Date(task.created_at || new Date()),
       }))
     );
   };
@@ -53,7 +53,7 @@ const Index = () => {
         {
           title: newTaskTitle,
           created_by: user.id,
-          status: "pending",
+          status: "pending" as TaskStatus,
         },
       ])
       .select()
@@ -66,8 +66,9 @@ const Index = () => {
 
     const newTask: Task = {
       ...data,
+      status: (data.status || "pending") as TaskStatus,
       timeSpent: 0,
-      createdAt: new Date(data.created_at),
+      createdAt: new Date(data.created_at || new Date()),
     };
 
     setTasks((prev) => [newTask, ...prev]);

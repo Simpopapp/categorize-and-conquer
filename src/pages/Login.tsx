@@ -32,23 +32,29 @@ export default function Login() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignUp = async () => {
+    if (!username || !password) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.signUp({
         email: `${username}@user.com`,
         password,
-        options: {
-          data: {
-            username: username,
-          },
-        },
       });
 
       if (error) throw error;
-      toast.success("Cadastro realizado! Pode fazer login agora.");
+      
+      // Auto login after signup
+      await supabase.auth.signInWithPassword({
+        email: `${username}@user.com`,
+        password,
+      });
+      
+      navigate("/");
+      toast.success("Conta criada com sucesso!");
     } catch (error) {
       toast.error("Erro ao criar conta. Tente novamente.");
     } finally {
@@ -58,26 +64,32 @@ export default function Login() {
 
   const handleGuestLogin = async () => {
     setLoading(true);
-    const randomUser = `guest_${Math.random().toString(36).substring(7)}`;
+    const guestUser = `guest_${Math.random().toString(36).substring(7)}`;
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: `${randomUser}@guest.com`,
-        password: "sema",
-        options: {
-          data: {
-            username: randomUser,
-          },
-        },
+      // Create and login as guest in one step
+      const { error } = await supabase.auth.signInWithPassword({
+        email: "guest@guest.com",
+        password: "sema123",
       });
 
-      if (error) throw error;
-
-      // Auto login after guest account creation
-      await supabase.auth.signInWithPassword({
-        email: `${randomUser}@guest.com`,
-        password: "sema",
-      });
+      if (error) {
+        // If guest account doesn't exist, create it
+        if (error.message.includes("Invalid login credentials")) {
+          await supabase.auth.signUp({
+            email: "guest@guest.com",
+            password: "sema123",
+          });
+          
+          // Try logging in again
+          await supabase.auth.signInWithPassword({
+            email: "guest@guest.com",
+            password: "sema123",
+          });
+        } else {
+          throw error;
+        }
+      }
 
       navigate("/");
       toast.success("Bem-vindo, convidado!");
