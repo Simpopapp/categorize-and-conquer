@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +18,7 @@ export default function Login() {
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: `${username}@user.com`,
         password,
       });
 
@@ -38,12 +38,17 @@ export default function Login() {
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: `${username}@user.com`,
         password,
+        options: {
+          data: {
+            username: username,
+          },
+        },
       });
 
       if (error) throw error;
-      toast.success("Cadastro realizado! Verifique seu email.");
+      toast.success("Cadastro realizado! Pode fazer login agora.");
     } catch (error) {
       toast.error("Erro ao criar conta. Tente novamente.");
     } finally {
@@ -59,6 +64,11 @@ export default function Login() {
       const { error } = await supabase.auth.signUp({
         email: `${randomUser}@guest.com`,
         password: "sema",
+        options: {
+          data: {
+            username: randomUser,
+          },
+        },
       });
 
       if (error) throw error;
@@ -89,10 +99,10 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Nome de usuário"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
             <Input
