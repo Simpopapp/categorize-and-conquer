@@ -5,7 +5,7 @@ import { TaskTimer } from "./TaskTimer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, CheckSquare } from "lucide-react";
 
 interface TaskListProps {
   tasks: Task[];
@@ -15,10 +15,7 @@ interface TaskListProps {
 export function TaskList({ tasks, onUpdateTask }: TaskListProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
-  const handleStatusChange = (task: Task) => {
-    const newStatus = task.status === "pending" ? "in_progress" : 
-                     task.status === "in_progress" ? "completed" : "pending";
-    
+  const handleStatusChange = (task: Task, newStatus: Task["status"]) => {
     onUpdateTask({ ...task, status: newStatus });
     
     if (newStatus === "in_progress") {
@@ -26,7 +23,7 @@ export function TaskList({ tasks, onUpdateTask }: TaskListProps) {
     } else if (newStatus === "completed") {
       toast.success("Task completed!");
     } else {
-      toast.success("Task reset to pending");
+      toast.success("Task paused");
     }
   };
 
@@ -41,28 +38,42 @@ export function TaskList({ tasks, onUpdateTask }: TaskListProps) {
           key={task.id}
           className={cn(
             "bg-white rounded-lg shadow-sm p-4 transition-all duration-200",
-            "hover:shadow-md cursor-pointer"
+            "hover:shadow-md"
           )}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleStatusChange(task)}
-                className={cn(
-                  "min-w-[100px] flex items-center gap-2",
-                  task.status === "completed" && "bg-green-100 text-green-700",
-                  task.status === "in_progress" && "bg-blue-100 text-blue-700"
-                )}
-              >
-                {task.status === "in_progress" ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-                {task.status.replace("_", " ")}
-              </Button>
+              {task.status !== "completed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStatusChange(task, task.status === "pending" ? "in_progress" : "pending")}
+                  className={cn(
+                    "min-w-[100px] flex items-center gap-2",
+                    task.status === "in_progress" && "bg-blue-100 text-blue-700"
+                  )}
+                >
+                  {task.status === "in_progress" ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  {task.status === "in_progress" ? "Pause" : "Start"}
+                </Button>
+              )}
+              
+              {task.status !== "completed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStatusChange(task, "completed")}
+                  className="flex items-center gap-2 text-green-700"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  Complete
+                </Button>
+              )}
+              
               <h3 className="font-medium">{task.title}</h3>
             </div>
             <div className="flex items-center space-x-4">
