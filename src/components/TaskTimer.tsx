@@ -11,7 +11,7 @@ export function TaskTimer({ isActive, onTick, initialTime = 0 }: TaskTimerProps)
   const [time, setTime] = useState(initialTime);
 
   useEffect(() => {
-    let interval: number;
+    let interval: NodeJS.Timeout | undefined;
 
     if (isActive) {
       interval = setInterval(() => {
@@ -23,7 +23,9 @@ export function TaskTimer({ isActive, onTick, initialTime = 0 }: TaskTimerProps)
       }, 1000);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isActive, onTick]);
 
   return (

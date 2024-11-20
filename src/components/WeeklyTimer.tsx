@@ -11,7 +11,7 @@ export function WeeklyTimer({ hasActiveTasks }: WeeklyTimerProps) {
   const [timeLeft, setTimeLeft] = useState(WEEKLY_TIME);
 
   useEffect(() => {
-    let interval: number;
+    let interval: NodeJS.Timeout | undefined;
 
     if (hasActiveTasks && timeLeft > 0) {
       interval = setInterval(() => {
@@ -19,7 +19,9 @@ export function WeeklyTimer({ hasActiveTasks }: WeeklyTimerProps) {
       }, 1000);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [hasActiveTasks, timeLeft]);
 
   return (
