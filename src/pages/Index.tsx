@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Task } from "@/lib/types";
 import { generateId } from "@/lib/utils";
 import { WeeklyTimer } from "@/components/WeeklyTimer";
@@ -7,31 +7,88 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const { user, signOut } = useAuth();
 
-  const handleAddTask = () => {
-    if (!newTaskTitle.trim()) {
-      toast.error("Please enter a task title");
+  useEffect(() => {
+    fetchTasks();
+  }, [user]);
+
+  const fetchTasks = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error("Erro ao carregar tarefas");
+      return;
+    }
+
+    setTasks(
+      data.map((task) => ({
+        ...task,
+        timeSpent: 0,
+        createdAt: new Date(task.created_at),
+      }))
+    );
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim() || !user) {
+      toast.error("Por favor, insira um título para a tarefa");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert([
+        {
+          title: newTaskTitle,
+          created_by: user.id,
+          status: "pending",
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Erro ao criar tarefa");
       return;
     }
 
     const newTask: Task = {
-      id: generateId(),
-      title: newTaskTitle,
-      status: "pending",
+      ...data,
       timeSpent: 0,
-      createdAt: new Date(),
+      createdAt: new Date(data.created_at),
     };
 
     setTasks((prev) => [newTask, ...prev]);
     setNewTaskTitle("");
-    toast.success("Task added successfully");
+    toast.success("Tarefa criada com sucesso!");
   };
 
-  const handleUpdateTask = (updatedTask: Task) => {
+  const handleUpdateTask = async (updatedTask: Task) => {
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        status: updatedTask.status,
+        description: updatedTask.description,
+      })
+      .eq("id", updatedTask.id);
+
+    if (error) {
+      toast.error("Erro ao atualizar tarefa");
+      return;
+    }
+
     setTasks((prev) =>
       prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
     );
@@ -44,25 +101,30 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container max-w-4xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Task Timer</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Task Timer</h1>
+          <Button variant="outline" onClick={signOut}>
+            Sair
+          </Button>
+        </div>
 
         <WeeklyTimer hasActiveTasks={hasActiveTasks} />
 
         <div className="flex space-x-4 mb-8">
           <Input
-            placeholder="Add a new task..."
+            placeholder="Adicionar nova tarefa..."
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
             className="flex-1"
           />
-          <Button onClick={handleAddTask}>Add Task</Button>
+          <Button onClick={handleAddTask}>Adicionar</Button>
         </div>
 
         <Tabs defaultValue="current" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="current">Current Tasks</TabsTrigger>
-            <TabsTrigger value="completed">Completed Tasks</TabsTrigger>
+            <TabsTrigger value="current">Tarefas Atuais</TabsTrigger>
+            <TabsTrigger value="completed">Tarefas Concluídas</TabsTrigger>
           </TabsList>
           
           <TabsContent value="current">
